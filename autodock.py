@@ -34,10 +34,10 @@ from os import stat
 from os.path import abspath
 from stat import ST_SIZE
 from time import sleep, time
-import Tkinter
-import Tkinter,Pmw
-from Tkinter import *
-import tkMessageBox, tkFileDialog
+import tkinter
+import tkinter,Pmw
+from tkinter import *
+import tkinter.messagebox, tkinter.filedialog
 import Pmw
 from threading import Thread
 #from commands import getstatusoutput
@@ -46,7 +46,7 @@ from pymol.cmd import _feedback,fb_module,fb_mask,is_list,_cmd
 from pymol.cgo import *
 from pymol import stored
 from numpy import *
-import tkColorChooser
+import tkinter.colorchooser
 from pymol.vfont import plain
 from glob import glob
 import platform
@@ -58,13 +58,13 @@ __version__ = "2.2.0_rev_28Mar2015"
 #     INITIALISE PLUGIN
 #
 
-if os.environ.has_key('ADPLUGIN_PATH'):
+if 'ADPLUGIN_PATH' in os.environ:
     os.environ['PATH'] = os.environ['ADPLUGIN_PATH']
-if os.environ.has_key('ADPLUGIN_PYTHONHOME'):
+if 'ADPLUGIN_PYTHONHOME' in os.environ:
     os.environ['PYTHONHOME'] = os.environ['ADPLUGIN_PYTHONHOME']
-if os.environ.has_key('ADPLUGIN_PYTHONPATH'):
+if 'ADPLUGIN_PYTHONPATH' in os.environ:
     os.environ['PYTHONPATH'] = os.environ['ADPLUGIN_PYTHONPATH']
-if os.environ.has_key('ADPLUGIN_FONT'):
+if 'ADPLUGIN_FONT' in os.environ:
     adplugin_font_list = os.environ['ADPLUGIN_FONT'].split()
     adplugin_font = (adplugin_font_list[0], adplugin_font_list[1])
 else:
@@ -72,11 +72,11 @@ else:
 adplugin_font_name = adplugin_font[0]
 adplugin_font_size = int(adplugin_font[1])
 if not (adplugin_font_name in Pmw.logicalfontnames()):
-    print "'"+adplugin_font_name+"' not in ", Pmw.logicalfontnames()
-    print "changing to Courier"
+    print("'"+adplugin_font_name+"' not in ", Pmw.logicalfontnames())
+    print("changing to Courier")
     adplugin_font_name = "Courier"
 if adplugin_font_size < 4 or adplugin_font_size > 36:
-    print "'"+str(adplugin_font_size)+ "' not an acceptable font size, changing to 12"
+    print("'"+str(adplugin_font_size)+ "' not an acceptable font size, changing to 12")
     adplugin_font_size = 12
 adplugin_font = (adplugin_font_name,adplugin_font_size)
 
@@ -86,11 +86,11 @@ def getstatusoutput(cmd):
     """This implementation should work on all platforms."""
     import subprocess
     cur_env = dict(os.environ.copy())
-    if os.environ.has_key('ADPLUGIN_PATH'):
+    if 'ADPLUGIN_PATH' in os.environ:
         cur_env['PATH'] = os.environ['ADPLUGIN_PATH']
-    if os.environ.has_key('ADPLUGIN_PYTHONHOME'):
+    if 'ADPLUGIN_PYTHONHOME' in os.environ:
         cur_env['PYTHONHOME'] = os.environ['ADPLUGIN_PYTHONHOME']
-    if os.environ.has_key('ADPLUGIN_PYTHONPATH'):
+    if 'ADPLUGIN_PYTHONPATH' in os.environ:
         cur_env['PYTHONPATH'] = os.environ['ADPLUGIN_PYTHONPATH']
     sts = 0
     output = ""
@@ -99,19 +99,22 @@ def getstatusoutput(cmd):
         stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         sts = 256
-        print "getstatusoutput failed"
-        print output, e.output
+        print("getstatusoutput failed")
+        print(output, e.output)
     return sts, output
 
 
-def __init__(self):
-    self.menuBar.addmenuitem('Plugin', 'command',
-    'Launch Autodock',
-    label='Autodock/Vina',
-    command = lambda s=self: Autodock(s))
-        
-    cmd.set("retain_order") # keep atom ordering
+# def __init__(self):
+#     self.menuBar.addmenuitem('Plugin', 'command',
+#     'Launch Autodock',
+#     label='Autodock/Vina',
+#     command = lambda s=self: Autodock(s))
+#
+#     cmd.set("retain_order") # keep atom ordering
 
+def __init_plugin__(self):
+    plugins.addmenuitem('Launch Autodock', lambda s=self: Autodock(s))
+    cmd.set("retain_order") # keep atom ordering
 
 #=============================================================================
 #
@@ -170,8 +173,8 @@ else:
 tmp_dir = os.path.join(home,'.ADplugin')
 if not os.path.isdir(tmp_dir):
     os.mkdir(tmp_dir)
-    print "Created temporary files directory:  %s" % tmp_dir
-    
+    print("Created temporary files directory:  %s" % tmp_dir)
+
 default_settings = {
     "grid_spacing" : '0.375',
     "n_points_X":'60',
@@ -208,7 +211,7 @@ GRID_CENTER_FROM_COORDINATES = 1
 #==========================================================================
 #
 #    THREAD CLASSES FOR SPAWNING DOCKING JOBS
-        
+
 
 class Thread_run(Thread):
     def __init__ (self,command, previous = None, status_line = None, log_text = None, outlog = None):
@@ -222,7 +225,7 @@ class Thread_run(Thread):
     def run(self):
         if self.previous:
             self.previous.join()
-        print "Starting run of ", self.command
+        print("Starting run of ", self.command)
         self.status, output = getstatusoutput(self.command)
         if (self.outlog):
             self.outlog[log] = output
@@ -231,14 +234,14 @@ class Thread_log(Thread):
     def __init__(self, logfile, mythread, timeout):
         Thread.__init__(self)
         self.logfile = logfile.replace("\\","/")
-        print "logfile",logfile
-        print "self.logfile",self.logfile
+        print("logfile",logfile)
+        print("self.logfile",self.logfile)
         self.mythread = mythread
         self.timeout = timeout
     def run(self):
         global transfer_status
         global transfer_docking_text
-        if not os.environ.has_key('ADPLUGIN_NO_OUTPUT_REDIRECT'):
+        if 'ADPLUGIN_NO_OUTPUT_REDIRECT' not in os.environ:
             seconds = 0
             readcount = 0
             if platform.system().lower() == "windows":
@@ -254,7 +257,7 @@ class Thread_log(Thread):
                     while readcount < os.path.getsize(self.logfile):
                         logline = f.readline()
                         if not logline: break
-                        print logline,
+                        print(logline, end=' ')
                         transfer_status['log'] = logline
                         transfer_status['line_count'] = transfer_status['line_count']+1;
                         page_text = transfer_docking_text['log'];
@@ -272,7 +275,7 @@ class Thread_log(Thread):
                 while readcount < os.path.getsize(self.logfile):
                     logline = f.readline()
                     if not logline: break
-                    print logline,
+                    print(logline, end=' ')
                     page_text = transfer_docking_text['log'];
                     transfer_docking_text['log'] =  page_text+logline
                     transfer_docking_text['line_count'] = transfer_docking_text['line_count']+1
@@ -295,7 +298,7 @@ class Thread_log(Thread):
 
 class ADModel:
     """ STORAGE CLASS FOR DOCKED LIGANDS """
-    
+
     def __init__(self, lst = None):
         self.atomlines = []
         self.energy = 0.
@@ -307,7 +310,7 @@ class ADModel:
         self.as_string = ''
         if lst is not None:
             self.from_list(lst)
-            
+
     def from_list(self, lst):
         self.lst = lst
         for line in lst:
@@ -324,7 +327,7 @@ class ADModel:
                 if 'VINA RESULT' in line:
                     entr = line.split(':')[1]
                     self.energy = float(entr.split()[0])
-                    
+
     def as_pdb_string(self):
         return self.as_string
     def info_string(self):
@@ -335,7 +338,7 @@ class ADModel:
 
 class ADGridMap:
     """ CLASS FOR HANDLING AUTODOCK GRID MAP FILES"""
-    
+
     def __init__(self, fp = None, name = 'map'):
 
         self.name = ''
@@ -352,7 +355,7 @@ class ADGridMap:
         self.precision = 0.0001
         if fp is not None:
             self.read(fp,name)
-            
+
     def read(self,fp,name='map'):
         self.name = name
         for i in range(6):
@@ -379,28 +382,28 @@ class ADGridMap:
             i+=1
         for i in range(3):
             self.origin[i] = self.center[i]-self.npts[i]/2*self.spacing
-            
+
     def meta(self):
         s= 'GRID_PARAMETER_FILE %s\n' % self.paramfile + \
            'GRID_DATA_FILE %s\n' % self.datafile +\
            'MACROMOLECULE %s\n' % self.molecule +\
            'SPACING %4.3f\n' % self.spacing +\
            'NELEMENTS %d %d %d\n' % (self.npts[0],self.npts[1],self.npts[2]) +\
-           'CENTER %5.3f %5.3f %5.3f\n' % (self.center[0],self.center[1],self.center[2]) 
+           'CENTER %5.3f %5.3f %5.3f\n' % (self.center[0],self.center[1],self.center[2])
         return s
 
     def write(self,fp):
-        print >>fp, 'GRID_PARAMETER_FILE %s' % self.paramfile
-        print >>fp, 'GRID_DATA_FILE %s' % self.datafile
-        print >>fp, 'MACROMOLECULE %s' % self.molecule
-        print >>fp, 'SPACING %4.3f' % self.spacing
-        print >>fp, 'NELEMENTS %d %d %d' % (self.npts[0],self.npts[1],self.npts[2])
-        print >>fp, 'CENTER %5.3f %5.3f %5.3f' % (self.center[0],self.center[1],self.center[2])
+        print('GRID_PARAMETER_FILE %s' % self.paramfile, file=fp)
+        print('GRID_DATA_FILE %s' % self.datafile, file=fp)
+        print('MACROMOLECULE %s' % self.molecule, file=fp)
+        print('SPACING %4.3f' % self.spacing, file=fp)
+        print('NELEMENTS %d %d %d' % (self.npts[0],self.npts[1],self.npts[2]), file=fp)
+        print('CENTER %5.3f %5.3f %5.3f' % (self.center[0],self.center[1],self.center[2]), file=fp)
         for x in self.values:
             if abs(x) < self.precision:
-                print >>fp, '0.'
+                print('0.', file=fp)
             else:
-                print >>fp, '%.3f' % x
+                print('%.3f' % x, file=fp)
 
     def writeDX(self,fname):
         fp = open(fname,'w')
@@ -411,17 +414,17 @@ class ADGridMap:
         spacing = self.spacing
         vals = self.values
 
-        print >>fp,'#=================================='
-        print >>fp,'# AutoGrid Map File: %s' % self.name
-        print >>fp,'# Receptor File Name: %s' % self.molecule
-        print >>fp,'#=================================='
-        print >>fp,'object 1 class gridpositions counts %d %d %d' % (nx,ny,nz)
-        print >>fp,'origin %12.5E %12.5E %12.5E' % (ori[0],ori[1],ori[2])
-        print >>fp,'delta %12.5E %12.5E %12.5E' % (spacing,0,0)
-        print >>fp,'delta %12.5E %12.5E %12.5E' % (0,spacing,0)
-        print >>fp,'delta %12.5E %12.5E %12.5E' % (0,0,spacing)
-        print >>fp,'object 2 class gridconnections counts %d %d %d' % (nx,ny,nz)
-        print >>fp,'object 3 class array type double rank 0 items %d data follows' % len(vals)
+        print('#==================================', file=fp)
+        print('# AutoGrid Map File: %s' % self.name, file=fp)
+        print('# Receptor File Name: %s' % self.molecule, file=fp)
+        print('#==================================', file=fp)
+        print('object 1 class gridpositions counts %d %d %d' % (nx,ny,nz), file=fp)
+        print('origin %12.5E %12.5E %12.5E' % (ori[0],ori[1],ori[2]), file=fp)
+        print('delta %12.5E %12.5E %12.5E' % (spacing,0,0), file=fp)
+        print('delta %12.5E %12.5E %12.5E' % (0,spacing,0), file=fp)
+        print('delta %12.5E %12.5E %12.5E' % (0,0,spacing), file=fp)
+        print('object 2 class gridconnections counts %d %d %d' % (nx,ny,nz), file=fp)
+        print('object 3 class array type double rank 0 items %d data follows' % len(vals), file=fp)
         for k in range(nz):
             col=0;
             for j in range(ny):
@@ -429,13 +432,13 @@ class ADGridMap:
                     fp.write(" %12.5E" % vals[i*ny*nz + j*nz + k])
                     col+=1;
                     if col==3:
-                        print >>fp
+                        print(file=fp)
                         col=0
-        print >>fp,'attribute \"dep\" string \"positions\"'
-        print >>fp,'object \"regular positions regular connections\" class field'
-        print >>fp,'component \"positions\" value 1'
-        print >>fp,'component \"connections\" value 2'
-        print >>fp,'component \"data\" value 3'
+        print('attribute \"dep\" string \"positions\"', file=fp)
+        print('object \"regular positions regular connections\" class field', file=fp)
+        print('component \"positions\" value 1', file=fp)
+        print('component \"connections\" value 2', file=fp)
+        print('component \"data\" value 3', file=fp)
         fp.close()
 
 #==========================================================================
@@ -443,7 +446,7 @@ class ADGridMap:
 #    CLASSES FOR INTERNAL HANDLING OF RECEPTORS AND LIGANDS
 
 class Receptor:
-    """CONTAINS ALL INFORMATION ABOUT A DEFINED RECEPTOR"""    
+    """CONTAINS ALL INFORMATION ABOUT A DEFINED RECEPTOR"""
     def __init__(self):
         self.selection = ''
         self.pdb_file = ''
@@ -452,17 +455,17 @@ class Receptor:
         self.receptor_flexible = ''
         self.flexible_residues = {}
         self.resi_dic = {}
-        
+
     def flex_res_string(self):
         flex_res_str = ''
         spacer = os.path.basename(self.receptor_pdbqt)[:-6]
-        for key, val in self.flexible_residues.items():
+        for key, val in list(self.flexible_residues.items()):
             s = ''
             lst = []
             for idx, resname in val:
                 lst.append( resname + str(idx) )
             s+=':'+key+':'+'_'.join(lst)
-            print "adding '"+spacer+':'+key+':'+'_'.join(lst)+"' to flex_res_str"
+            print("adding '"+spacer+':'+key+':'+'_'.join(lst)+"' to flex_res_str")
             flex_res_str+=(spacer + s)
             spacer = ','+os.path.basename(self.receptor_pdbqt)[:-6]
         return flex_res_str
@@ -499,14 +502,14 @@ class Ligand:
         s+=' > Poses output file       : %s\n' % self.outfile_poses
         s+='#=============================================\n'
         return s
-    
+
 #==========================================================================
 #
 #    THE MAJOR, PRETTY BIG PLUGIN CLASS
 
 class Autodock:
     """ THE MAJOR PLUGIN CLASS """
-    
+
     def __init__(self,app):
         global transfer_docking_text
         global global_status
@@ -518,7 +521,7 @@ class Autodock:
         self.ligand_dic = {}
         # directory with ligands
         self.ligand_dir = StringVar()
-        
+
         # box display settings
         self.box_display_mode = IntVar()
         self.box_display_mode.set(BOX_AS_BOX)
@@ -531,7 +534,7 @@ class Autodock:
         self.box_display_mesh_grid = DoubleVar()
         self.box_display_mesh_grid.set(default_settings['box_mesh_grid_size'])
         self.box_size = []
-        
+
         # grid definition
 
         self.grid_spacing = DoubleVar()
@@ -570,14 +573,14 @@ class Autodock:
         self.current_thread = None
 
         # build main window
-        
+
         self.dialog = Pmw.Dialog(parent,
                                  buttons = ('Exit',),
                                  title = 'PyMOL Autodock/Vina Plugin',
                                  command = self.button_pressed)
         self.dialog.withdraw()
         Pmw.setbusycursorattributes(self.dialog.component('hull'))
-        self.status_line = Label(self.dialog.interior(), 
+        self.status_line = Label(self.dialog.interior(),
                                  relief='sunken',
                                  font=adplugin_font, anchor='w',fg='yellow',bg='black')
         self.status_line.pack(side=BOTTOM,fill='x', expand=1, padx=0, pady=0)
@@ -589,7 +592,7 @@ class Autodock:
 
         # the title
 
-        self.title_label = Tkinter.Label(self.dialog.interior(),
+        self.title_label = tkinter.Label(self.dialog.interior(),
                                          text = 'PyMOL Autodock/Vina Plugin -- Daniel Seeliger (rev 28 Mar 15) -- <http://wwwuser.gwdg.de/~dseelig>',
                                          background = 'navy',
                                          foreground = 'white',
@@ -599,7 +602,6 @@ class Autodock:
 
 
         # the basic notebook
-
         self.notebook = Pmw.NoteBook(self.dialog.interior())
         self.notebook.pack(fill='both',expand=1,padx=3,pady=3)
 
@@ -626,7 +628,7 @@ class Autodock:
         self.grid_page_left_side.pack(side = LEFT, fill = 'both',expand = 0, padx = 10, pady = 3)
 
         # grid spacing entry
-        self.grid_spacing_frame = Tkinter.Frame(self.grid_page_left_side.interior())
+        self.grid_spacing_frame = tkinter.Frame(self.grid_page_left_side.interior())
         self.grid_spacing_label = Label(self.grid_spacing_frame, text='Spacing:', width = 10)
         self.grid_spacing_location = Entry(self.grid_spacing_frame, textvariable= self.grid_spacing, bg='black',fg='green', width = 10)
         self.grid_spacing_scrollbar = Scrollbar(self.grid_spacing_frame, orient = 'horizontal', command = self.grid_spacing_changed)
@@ -636,7 +638,7 @@ class Autodock:
         self.grid_spacing_frame.pack(fill = 'x', padx = 4, pady=1)
 
         # n grid points entries
-        self.n_points_X_frame = Tkinter.Frame(self.grid_page_left_side.interior())
+        self.n_points_X_frame = tkinter.Frame(self.grid_page_left_side.interior())
         self.n_points_X_label = Label(self.n_points_X_frame, text='X-points:', width = 10)
         self.n_points_X_location = Entry(self.n_points_X_frame, textvariable= self.n_points_X, bg='black',fg='green', width = 10)
         self.n_points_X_scrollbar = Scrollbar(self.n_points_X_frame, orient = 'horizontal', command = self.n_points_X_changed)
@@ -645,7 +647,7 @@ class Autodock:
         self.n_points_X_scrollbar.pack(side = LEFT, anchor='w')
         self.n_points_X_frame.pack(fill = 'x', padx = 4, pady=1)
 
-        self.n_points_Y_frame = Tkinter.Frame(self.grid_page_left_side.interior())
+        self.n_points_Y_frame = tkinter.Frame(self.grid_page_left_side.interior())
         self.n_points_Y_label = Label(self.n_points_Y_frame, text='Y-points:', width = 10)
         self.n_points_Y_location = Entry(self.n_points_Y_frame, textvariable= self.n_points_Y, bg='black',fg='green', width = 10)
         self.n_points_Y_scrollbar = Scrollbar(self.n_points_Y_frame, orient = 'horizontal', command = self.n_points_Y_changed)
@@ -654,7 +656,7 @@ class Autodock:
         self.n_points_Y_scrollbar.pack(side = LEFT, anchor='w')
         self.n_points_Y_frame.pack(fill = 'x', padx = 4, pady=1)
 
-        self.n_points_Z_frame = Tkinter.Frame(self.grid_page_left_side.interior())
+        self.n_points_Z_frame = tkinter.Frame(self.grid_page_left_side.interior())
         self.n_points_Z_label = Label(self.n_points_Z_frame, text='Z-points:', width = 10)
         self.n_points_Z_location = Entry(self.n_points_Z_frame, textvariable= self.n_points_Z, bg='black',fg='green', width = 10)
         self.n_points_Z_scrollbar = Scrollbar(self.n_points_Z_frame, orient = 'horizontal', command = self.n_points_Z_changed)
@@ -681,17 +683,17 @@ class Autodock:
         self.display_button_box.add('Show Box',command = self.show_box)
         self.display_button_box.add('Hide Box',command = self.hide_box)
         self.display_button_box.add('Change Box Color',command = self.change_box_color)
-        
+
 
         # display options on the right
         self.grid_page_right_side = Pmw.Group(self.grid_page_main_group.interior(), tag_text = 'Display Options')
         self.grid_page_right_side.pack(side = LEFT, fill = 'both', expand = 0, padx = 10, pady = 3)
 
         self.box_display_radiogroups = []
-        self.box_display_radioframe = Tkinter.Frame(self.grid_page_right_side.interior())
+        self.box_display_radioframe = tkinter.Frame(self.grid_page_right_side.interior())
 
         self.box_display_cylinder_frame = Pmw.Group(self.box_display_radioframe,
-                                                    tag_pyclass = Tkinter.Radiobutton,
+                                                    tag_pyclass = tkinter.Radiobutton,
                                                     tag_text = 'Cylindric Box',
                                                     tag_value = 0,
                                                     tag_variable = self.box_display_mode
@@ -699,23 +701,23 @@ class Autodock:
         self.box_display_cylinder_frame.pack(fill='x',expand = 1,side=TOP)
         self.box_display_radiogroups.append(self.box_display_cylinder_frame)
 
-        self.box_display_cylinder_size_frame = Tkinter.Frame(self.box_display_cylinder_frame.interior())
+        self.box_display_cylinder_size_frame = tkinter.Frame(self.box_display_cylinder_frame.interior())
         self.box_display_cylinder_size_label = Label(self.box_display_cylinder_size_frame, text = 'Size:', width=10)
         self.box_display_cylinder_size_location = Entry(self.box_display_cylinder_size_frame,
                                                         textvariable = self.box_display_cylinder_size,
                                                         bg = 'black',fg = 'green', width = 10)
         self.box_display_cylinder_size_scrollbar = Scrollbar(self.box_display_cylinder_size_frame,
                                                              orient = 'horizontal',command = self.box_display_cylinder_size_changed)
-        
+
 
         self.box_display_cylinder_size_label.pack(side = LEFT)
         self.box_display_cylinder_size_location.pack(side = LEFT)
         self.box_display_cylinder_size_scrollbar.pack(side = LEFT)
         self.box_display_cylinder_size_frame.pack(fill='x',padx = 4, pady=1)
-        
+
 
         self.box_display_wire_frame = Pmw.Group(self.box_display_radioframe,
-                                                tag_pyclass = Tkinter.Radiobutton,
+                                                tag_pyclass = tkinter.Radiobutton,
                                                 tag_text = 'Wired Box',
                                                 tag_value = 1,
                                                 tag_variable = self.box_display_mode
@@ -723,7 +725,7 @@ class Autodock:
         self.box_display_wire_frame.pack(fill='x',expand = 1)
         self.box_display_radiogroups.append(self.box_display_wire_frame)
 
-        self.box_display_mesh_line_width_frame = Tkinter.Frame(self.box_display_wire_frame.interior())
+        self.box_display_mesh_line_width_frame = tkinter.Frame(self.box_display_wire_frame.interior())
         self.box_display_mesh_line_width_label = Label(self.box_display_mesh_line_width_frame, text = 'Line Width:', width=10)
         self.box_display_mesh_line_width_location = Entry(self.box_display_mesh_line_width_frame,
                                                           textvariable = self.box_display_line_width,
@@ -735,8 +737,8 @@ class Autodock:
         self.box_display_mesh_line_width_scrollbar.pack(side = LEFT)
         self.box_display_mesh_line_width_frame.pack(fill='x',padx=4,pady=1)
 
-        
-        self.box_display_mesh_grid_frame = Tkinter.Frame(self.box_display_wire_frame.interior())
+
+        self.box_display_mesh_grid_frame = tkinter.Frame(self.box_display_wire_frame.interior())
         self.box_display_mesh_grid_label = Label(self.box_display_mesh_grid_frame, text = 'Grid Size:', width=10)
         self.box_display_mesh_grid_location = Entry(self.box_display_mesh_grid_frame,
                                                     textvariable = self.box_display_mesh_grid,
@@ -750,16 +752,16 @@ class Autodock:
 
         self.box_display_radioframe.pack(padx = 6, pady = 6, expand='yes', fill='both')
         Pmw.aligngrouptags( self.box_display_radiogroups )
-        
+
         # grid center definition
-        
+
         self.grid_center_radiogroups = []
         self.grid_center_selection_mode = IntVar()
         self.grid_center_selection_mode.set(GRID_CENTER_FROM_SELECTION)
-        self.grid_center_radioframe = Tkinter.Frame(self.grid_definition_page)
+        self.grid_center_radioframe = tkinter.Frame(self.grid_definition_page)
 
         self.grid_center_radio_button_pymol_selection = Pmw.Group(self.grid_center_radioframe,
-                                                                  tag_pyclass = Tkinter.Radiobutton,
+                                                                  tag_pyclass = tkinter.Radiobutton,
                                                                   tag_text = 'Calculate Grid Center by Selection',
                                                                   tag_value = GRID_CENTER_FROM_SELECTION,
                                                                   tag_variable = self.grid_center_selection_mode
@@ -767,7 +769,7 @@ class Autodock:
         self.grid_center_radio_button_pymol_selection.pack(fill = 'x', expand = 1, side = TOP)
 
         self.grid_center_radiogroups.append(self.grid_center_radio_button_pymol_selection)
-        
+
         self.grid_center_selection_entry = Pmw.EntryField(self.grid_center_radio_button_pymol_selection.interior(),
                                                           labelpos = 'w',
                                                           label_text = 'Selection',
@@ -776,32 +778,32 @@ class Autodock:
                                                           )
         self.grid_center_selection_entry.pack(fill='x',padx=4,pady=1,expand=0)
 
-        
+
         self.grid_center_radio_button_coordinates = Pmw.Group(self.grid_center_radioframe,
-                                                              tag_pyclass = Tkinter.Radiobutton,
+                                                              tag_pyclass = tkinter.Radiobutton,
                                                               tag_text = 'Grid Center Coordinates',
                                                               tag_value = GRID_CENTER_FROM_COORDINATES,
                                                               tag_variable = self.grid_center_selection_mode
-                                                              )                                                              
+                                                              )
         self.grid_center_radio_button_coordinates.pack(fill = 'x', expand = 1, side = TOP)
-        
+
         self.grid_center_radiogroups.append(self.grid_center_radio_button_coordinates)
 
         self.grid_center_radioframe.pack(padx = 6, pady = 6, expand='yes', fill='both')
         Pmw.aligngrouptags(self.grid_center_radiogroups)
-        
-        
-        self.grid_center_X_frame = Tkinter.Frame(self.grid_center_radio_button_coordinates.interior())
+
+
+        self.grid_center_X_frame = tkinter.Frame(self.grid_center_radio_button_coordinates.interior())
         self.grid_center_X_label = Label(self.grid_center_X_frame, text = 'X:')
         self.grid_center_X_location = Entry(self.grid_center_X_frame, textvariable = self.grid_center[0], bg='black', fg='green', width=10)
         self.grid_center_X_scrollbar = Scrollbar(self.grid_center_X_frame,orient='horizontal',command = self.grid_center_X_changed)
 
-        self.grid_center_Y_frame = Tkinter.Frame(self.grid_center_radio_button_coordinates.interior())
+        self.grid_center_Y_frame = tkinter.Frame(self.grid_center_radio_button_coordinates.interior())
         self.grid_center_Y_label = Label(self.grid_center_Y_frame, text = 'Y:')
         self.grid_center_Y_location = Entry(self.grid_center_Y_frame, textvariable = self.grid_center[1], bg='black', fg='green', width=10)
         self.grid_center_Y_scrollbar = Scrollbar(self.grid_center_Y_frame,orient='horizontal',command = self.grid_center_Y_changed)
 
-        self.grid_center_Z_frame = Tkinter.Frame(self.grid_center_radio_button_coordinates.interior())
+        self.grid_center_Z_frame = tkinter.Frame(self.grid_center_radio_button_coordinates.interior())
         self.grid_center_Z_label = Label(self.grid_center_Z_frame, text = 'Z:')
         self.grid_center_Z_location = Entry(self.grid_center_Z_frame, textvariable = self.grid_center[2], bg='black', fg='green', width=10)
         self.grid_center_Z_scrollbar = Scrollbar(self.grid_center_Z_frame,orient='horizontal',command = self.grid_center_Z_changed)
@@ -824,7 +826,7 @@ class Autodock:
         self.select_binding_site_button_box = Pmw.ButtonBox(self.grid_center_radio_button_coordinates.interior(),orient='horizontal', padx=0,pady=0)
         self.select_binding_site_button_box.add('Select binding site',command = self.select_atoms_within_binding_site)
         self.select_binding_site_button_box.pack(side=TOP,expand = 1, padx = 3, pady = 3)
-        
+
         # load/write gpf
 
         self.gpf_file_io = Pmw.Group(self.grid_definition_page, tag_text='GPF File')
@@ -832,7 +834,7 @@ class Autodock:
 
         self.gpf_file_location = Pmw.EntryField(self.gpf_file_io.interior(),
                                                 labelpos = 'w',
-                                                label_pyclass = FileDialogButtonClassFactory.get(self.set_gpf_filename,mode='w',filter=[("Grid Parameter File","*.gpf")]),                                                
+                                                label_pyclass = FileDialogButtonClassFactory.get(self.set_gpf_filename,mode='w',filter=[("Grid Parameter File","*.gpf")]),
                                                 validate = {'validator':quickFileValidation,},
                                                 value = default_settings['gpf_file_name'],
                                                 label_text = 'Autodock GPF File:')
@@ -849,7 +851,7 @@ class Autodock:
 
         self.config_file_location = Pmw.EntryField(self.config_file_io.interior(),
                                                 labelpos = 'w',
-                                                label_pyclass = FileDialogButtonClassFactory.get(self.set_config_filename,mode='w',filter=[("Vina Config File","*.txt")]),                                                
+                                                label_pyclass = FileDialogButtonClassFactory.get(self.set_config_filename,mode='w',filter=[("Vina Config File","*.txt")]),
                                                 validate = {'validator':quickFileValidation,},
                                                 value = default_settings['config_file_name'],
                                                 label_text = 'VINA config File:')
@@ -888,7 +890,7 @@ class Autodock:
         self.configuration_group.pack(fill = 'both', expand = 0, padx = 10, pady = 2)
 
         self.config_settings = self.read_plugin_config_file()
-        
+
         self.autodock_tools_location = Pmw.EntryField(self.configuration_group.interior(),
                                          labelpos='w',
                                          label_pyclass = DirDialogButtonClassFactory.get(self.set_autodock_tools_path),
@@ -948,7 +950,7 @@ class Autodock:
 
         self.receptor_preparation_top_group = Pmw.Group(self.receptor_preparation_page, tag_text='Selections')
         self.receptor_preparation_top_group.pack(fill = 'both', expand = 0, padx=10, pady=5)
-        
+
         self.receptor_import_selection_button_box = Pmw.ButtonBox(self.receptor_preparation_top_group.interior(),orient='vertical', padx=0,pady=0)
         self.receptor_import_selection_button_box.add('Import Selections',command = self.import_selections)
         self.receptor_import_selection_button_box.pack(side=LEFT, fill='x', padx = 0, pady = 3)
@@ -967,15 +969,15 @@ class Autodock:
         self.receptor_button_box.pack(side=BOTTOM,expand = 1, padx = 10, pady = 5)
         self.receptor_button_box.add('Load',command = self.load_receptor_pdbqt)
 
-        
 
-        
 
-        
+
+
+
         self.receptor_preparation_center_group = Pmw.Group(self.receptor_preparation_page, tag_text='Receptor Preparation')
         self.receptor_preparation_center_group.pack(fill = 'both', expand = 0, padx=10, pady=5)
 
-        
+
         self.selection_list = Pmw.ComboBox(self.receptor_preparation_center_group.interior(),
                                                   scrolledlist_items=cmd.get_names("selections")+cmd.get_names(),
                                                   labelpos='nw',
@@ -993,7 +995,7 @@ class Autodock:
                                           selectioncommand=self.selected_receptor,
                                           dropdown=False
                                           )
- 
+
         self.flexible_residues_list = Pmw.ScrolledListBox(self.receptor_preparation_center_group.interior(),
                                         items=[],
                                         labelpos='nw',
@@ -1001,7 +1003,7 @@ class Autodock:
                                         listbox_height = 11,
                                         selectioncommand=self.delete_residue,
                                         )
-        
+
         self.selection_list.pack(side=LEFT, padx=0, anchor='n')
         self.receptor_conversion_button_box = Pmw.ButtonBox(self.receptor_preparation_center_group.interior(),orient='vertical', padx=0,pady=0)
         self.receptor_conversion_button_box.add('Generate Receptor ->',command = self.generate_receptor)
@@ -1019,7 +1021,7 @@ class Autodock:
 
         myfont = Pmw.logicalfont(name=adplugin_font[0],size=int(adplugin_font[1]))
         self.receptor_page_log_text = Pmw.ScrolledText(self.receptor_preparation_bottom_group.interior(),
-                                                        borderframe=5, 
+                                                        borderframe=5,
                                                         vscrollmode='dynamic',
                                                         hscrollmode='dynamic',
                                                         labelpos='n',
@@ -1042,14 +1044,14 @@ class Autodock:
 
         self.ligand_preparation_top_group = Pmw.Group(self.ligand_preparation_page, tag_text='Selections')
         self.ligand_preparation_top_group.pack(fill = 'both', expand = 0, padx=10, pady=5)
-        
+
         self.ligand_import_selection_button_box = Pmw.ButtonBox(self.ligand_preparation_top_group.interior(),orient='vertical', padx=0,pady=0)
         self.ligand_import_selection_button_box.add('Import Selections',command = self.import_selections)
         self.ligand_import_selection_button_box.pack(side=LEFT, fill='x', padx = 0, pady = 3)
 
         self.ligand_dir_location = Pmw.EntryField(self.ligand_preparation_top_group.interior(),
                                                 labelpos = 'w',
-                                                label_pyclass = DirDialogButtonClassFactory.get(self.set_ligand_dir_location),                                                
+                                                label_pyclass = DirDialogButtonClassFactory.get(self.set_ligand_dir_location),
                                                 validate = {'validator':quickFileValidation,},
                                                 value = '',
                                                 label_text = 'Ligands:')
@@ -1059,13 +1061,13 @@ class Autodock:
         self.ligand_button_box.pack(side=BOTTOM,expand = 1, padx = 10, pady = 5)
         self.ligand_button_box.add('Import',command = self.import_ligands)
 
-        
 
-        
+
+
         self.ligand_preparation_center_group = Pmw.Group(self.ligand_preparation_page, tag_text='Ligand Preparation')
         self.ligand_preparation_center_group.pack(fill = 'both', expand = 0, padx=10, pady=5)
 
-        
+
         self.ligand_selection_list = Pmw.ComboBox(self.ligand_preparation_center_group.interior(),
                                                   scrolledlist_items=cmd.get_names("selections")+cmd.get_names(),
                                                   labelpos='nw',
@@ -1119,7 +1121,7 @@ class Autodock:
 
         myfont = Pmw.logicalfont(name=adplugin_font[0],size=int(adplugin_font[1]))
         self.ligand_page_log_text = Pmw.ScrolledText(self.ligand_preparation_bottom_group.interior(),
-                                                        borderframe=5, 
+                                                        borderframe=5,
                                                         vscrollmode='dynamic',
                                                         hscrollmode='dynamic',
                                                         labelpos='n',
@@ -1132,7 +1134,7 @@ class Autodock:
                                                         )
         self.ligand_page_log_text.pack(side=LEFT, anchor='n',pady=0)
         self.ligand_page_log_text.insert('end',ligand_prep_text)
-        
+
 
 
         #------------------------------------------------------------------
@@ -1140,11 +1142,11 @@ class Autodock:
         #     DOCKING PAGE
 
 
-        
+
         self.docking_top_group = Pmw.Group(self.docking_page, tag_text='Docking')
         self.docking_top_group.pack(fill = 'both', expand = 0, padx=10, pady=5)
 
-        
+
         self.docking_receptor_rigid_list = Pmw.ComboBox(self.docking_top_group.interior(),
                                                   scrolledlist_items=[],
                                                   labelpos='nw',
@@ -1165,7 +1167,7 @@ class Autodock:
         )
 
         self.docking_ligand_list = Pmw.ComboBox(self.docking_top_group.interior(),
-                                                scrolledlist_items=['All'],
+                                                scrolledlist_items=['None', 'All'],
                                                 labelpos='nw',
                                                 label_text='Ligands',
                                                 listbox_height = 10,
@@ -1174,7 +1176,7 @@ class Autodock:
         )
 
         self.docking_nposes_list = Pmw.ComboBox(self.docking_top_group.interior(),
-                                                scrolledlist_items=range(1,101),
+                                                scrolledlist_items=list(range(1,101)),
                                                 labelpos='nw',
                                                 label_text='# Poses',
                                                 listbox_height = 10,
@@ -1183,7 +1185,7 @@ class Autodock:
         )
         self.docking_nposes_list.selectitem(9)
         self.docking_receptor_flexible_list.selectitem('No')
-        self.docking_ligand_list.selectitem('All')
+        self.docking_ligand_list.selectitem('None')
         self.docking_receptor_rigid_list.pack(side=LEFT, padx=0, anchor='n')
         self.docking_receptor_flexible_list.pack(side=LEFT, padx=0, anchor='n')
         self.docking_ligand_list.pack(side=LEFT, padx=0, anchor='n')
@@ -1197,7 +1199,7 @@ class Autodock:
         self.docking_center_group.pack(fill = 'both', expand = 0, padx=10, pady=5)
         self.docking_center_group2 = Pmw.Group(self.docking_page, tag_text='VINA')
         self.docking_center_group2.pack(fill = 'both', expand = 0, padx=10, pady=5)
-        
+
         self.docking_button_box = Pmw.ButtonBox(self.docking_center_group.interior(),orient='horizontal', padx=0,pady=0)
         self.docking_button_box.add('Run AutoGrid',command = self.run_autogrid)
         self.docking_button_box.add('Run AutoDock',command = self.run_autodock)
@@ -1206,17 +1208,19 @@ class Autodock:
         self.docking_button_box2 = Pmw.ButtonBox(self.docking_center_group2.interior(),orient='horizontal', padx=0,pady=0)
         self.docking_button_box2.add('Run Vina',command = self.run_vina)
         self.docking_button_box2.add('Write Vina Input File(s)',command = self.write_vina_input_files)
+        self.docking_button_box2.add('Write Vina for Talos',command = self.write_vina_talos)
+
         self.docking_button_box.pack(side=LEFT, fill='x', padx = 0, pady = 3)
         self.docking_button_box2.pack(side=LEFT, fill='x', padx = 0, pady = 3)
         self.docking_button_box.alignbuttons()
         self.docking_button_box2.alignbuttons()
- 
+
         self.docking_bottom_group = Pmw.Group(self.docking_page, tag_text='Log')
         self.docking_bottom_group.pack(fill = 'both', expand = 0, padx=10, pady=5)
 
         myfont = Pmw.logicalfont(name=adplugin_font[0],size=int(adplugin_font[1]))
         self.docking_page_log_text = Pmw.ScrolledText(self.docking_bottom_group.interior(),
-                                                        borderframe=5, 
+                                                        borderframe=5,
                                                         vscrollmode='dynamic',
                                                         hscrollmode='dynamic',
                                                         labelpos='n',
@@ -1228,7 +1232,7 @@ class Autodock:
                                                         )
         self.docking_page_log_text.pack(side=LEFT, anchor='n',pady=0)
         self.docking_page_log_text.insert('end',transfer_docking_text['log'])
-        
+
 
         #------------------------------------------------------------------
         #
@@ -1240,7 +1244,7 @@ class Autodock:
         self.pose_viewer_page_top_group.pack(fill = 'both', expand = 0, padx = 10, pady = 5)
 
 
-        
+
         self.pose_viewer_page_stucts = Pmw.Group(self.pose_viewer_page,tag_text='Poses')
         self.pose_viewer_page_stucts.pack(fill = 'both', expand = 1, padx = 10, pady = 0)
 
@@ -1250,7 +1254,7 @@ class Autodock:
         self.pose_viewer_notebook = Pmw.NoteBook(self.pose_viewer_page_stucts.interior())
         self.pose_viewer_notebook.pack(fill='both',expand=1,padx=3,pady=3)
         self.pose_viewer_pages = {}
-        self.pose_viewer_ligand_dic = {}        
+        self.pose_viewer_ligand_dic = {}
         self.pose_file = StringVar()
         self.pose_file.set(default_settings['dlg_input_file'])
         self.pose_file_location = Pmw.EntryField(self.pose_viewer_page_top_group.interior(),
@@ -1262,7 +1266,7 @@ class Autodock:
 
 #        self.pose_file_location.pack(fill = 'both', expand = 1, padx = 10, pady = 5)
         self.pose_file_location.pack(side=LEFT,fill = 'x', expand = 1, padx = 1, pady = 5)
-        
+
         self.load_pose_file_buttonbox = Pmw.ButtonBox(self.pose_viewer_page_top_group.interior(), padx=0)
         self.load_pose_file_buttonbox.pack(side=BOTTOM,expand = 1, padx = 10, pady = 5)
         self.load_pose_file_buttonbox.add('Load',command=self.load_ligand_file)
@@ -1298,10 +1302,10 @@ class Autodock:
         self.pose_viewer_radiobuttons.pack(padx=4,pady=1,side=TOP)
 
         self.pose_viewer_ligand_pages = {}
-        
+
         #---------------------------------------------------------------
         # SCORE/RANK PAGE
-        
+
         self.score_table = ScoreTable(self.rank_page)
         self.score_table.pack(pady=20)
 
@@ -1322,7 +1326,7 @@ class Autodock:
 
         self.rank_dat_file_location = Pmw.EntryField(self.rank_dat_file_io.interior(),
                                                 labelpos = 'w',
-                                                label_pyclass = FileDialogButtonClassFactory.get(self.set_rank_dat_filename,mode='w',filter=[("Data File","*.dat")]),                                                
+                                                label_pyclass = FileDialogButtonClassFactory.get(self.set_rank_dat_filename,mode='w',filter=[("Data File","*.dat")]),
                                                 validate = {'validator':quickFileValidation,},
                                                 value = default_settings['rank_dat_file_name'],
                                                 label_text = 'Filename:')
@@ -1341,7 +1345,7 @@ class Autodock:
 
         self.rank_csv_file_location = Pmw.EntryField(self.rank_csv_file_io.interior(),
                                                 labelpos = 'w',
-                                                label_pyclass = FileDialogButtonClassFactory.get(self.set_rank_csv_filename,mode='w',filter=[("CSV File","*.csv")]),                                                
+                                                label_pyclass = FileDialogButtonClassFactory.get(self.set_rank_csv_filename,mode='w',filter=[("CSV File","*.csv")]),
                                                 validate = {'validator':quickFileValidation,},
                                                 value = default_settings['rank_csv_file_name'],
                                                 label_text = 'Filename:')
@@ -1354,7 +1358,7 @@ class Autodock:
 
         self.rank_pose_file_location = Pmw.EntryField(self.rank_pose_file_io.interior(),
                                                 labelpos = 'w',
-                                                label_pyclass = FileDialogButtonClassFactory.get(self.set_rank_pose_filename,mode='w',filter=[("PDB File","*.pdb")]),                                                
+                                                label_pyclass = FileDialogButtonClassFactory.get(self.set_rank_pose_filename,mode='w',filter=[("PDB File","*.pdb")]),
                                                 validate = {'validator':quickFileValidation,},
                                                 value = default_settings['rank_pose_file_name'],
                                                 label_text = 'Filename:')
@@ -1372,18 +1376,18 @@ class Autodock:
         self.map_threshold = {}
         self.map_meta = {}
 
-        
+
         self.map_viewer_page_top_group = Pmw.Group(self.map_viewer_page,tag_text='Grid Map')
         self.map_viewer_page_top_group.pack(fill = 'both', expand = 0, padx = 10, pady = 5)
 
         # the maps card
-        
+
         self.map_viewer_page_center_group = Pmw.Group(self.map_viewer_page,tag_text='Maps')
         self.map_viewer_page_center_group.pack(fill = 'both', expand = 1, padx = 10, pady = 5)
         self.map_viewer_notebook = Pmw.NoteBook(self.map_viewer_page_center_group.interior())
         self.map_viewer_notebook.pack(fill='both',expand=1,padx=3,pady=3)
         self.map_pages = {}
-        self.map_dic = {}        
+        self.map_dic = {}
         self.mapfile = StringVar()
         self.mapfile.set(default_settings['map_input_file'])
         self.map_file_location = Pmw.EntryField(self.map_viewer_page_top_group.interior(),
@@ -1398,7 +1402,7 @@ class Autodock:
         self.load_map_buttonbox = Pmw.ButtonBox(self.map_viewer_page_top_group.interior(), padx=0)
         self.load_map_buttonbox.pack(side=BOTTOM,expand = 1, padx = 10, pady = 5)
         self.load_map_buttonbox.add('Load',command=self.load_grid_map)
-        
+
         self.parent.after(1000,self.proc_transfers)
 
 
@@ -1425,7 +1429,7 @@ class Autodock:
             self.docking_page_log_text.settext(transfer_docking_text['log'])
             transfer_docking_text['old_line_count'] = transfer_docking_text['line_count']
         self.parent.after(1000,self.proc_transfers)
-    
+
 
 
     def button_pressed(self, result):
@@ -1440,35 +1444,35 @@ class Autodock:
 
     #------------------------------------------------------------------
     # grid settings functions
-    
+
     def grid_spacing_changed(self, x):
         val =  float(self.grid_spacing.get())+float(x)*0.005
         self.grid_spacing.set(val)
         if self.box_is_on_display:
             self.grid_center_selection_mode.set(GRID_CENTER_FROM_COORDINATES)
-            
+
     def calculate_grid_center(self):
         if self.grid_center_selection_mode.get() == GRID_CENTER_FROM_SELECTION:
             sel = self.grid_center_selection_entry.get()
             if sel:
                 stored.xyz = []
                 cmd.iterate_state(1,sel,"stored.xyz.append([x,y,z])")
-                xx = average(map(lambda a: a[0], stored.xyz))
-                yy = average(map(lambda a: a[1], stored.xyz))
-                zz = average(map(lambda a: a[2], stored.xyz))
+                xx = average([a[0] for a in stored.xyz])
+                yy = average([a[1] for a in stored.xyz])
+                zz = average([a[2] for a in stored.xyz])
                 self.grid_center[0].set(round(xx,2))
                 self.grid_center[1].set(round(yy,2))
                 self.grid_center[2].set(round(zz,2))
             else:
                 self.grid_center_selection_mode.set(GRID_CENTER_FROM_COORDINATES)
-                    
-    
+
+
     def n_points_X_changed(self, x):
         val = int(self.n_points_X.get())+int(x)
         self.n_points_X.set(val)
         self.grid_center_selection_mode.set(GRID_CENTER_FROM_COORDINATES)
         self.show_box()
-        
+
 
     def n_points_Y_changed(self, x):
         val = int(self.n_points_Y.get())+int(x)
@@ -1493,7 +1497,7 @@ class Autodock:
         self.grid_center[0].set(val)
         self.show_box()
 
-        
+
     def grid_center_Y_changed(self, x):
         self.grid_center_selection_mode.set(GRID_CENTER_FROM_COORDINATES)
         val=float(self.grid_center[1].get())+float(x)*1.0
@@ -1506,27 +1510,27 @@ class Autodock:
         self.grid_center[2].set(val)
         self.show_box()
 
-    
+
     def select_atoms_within_binding_site(self):
         global global_status
         m = cmd.get_model("polymer")
         xmin, xmax = self.box_coords[0]
         ymin, ymax = self.box_coords[1]
         zmin, zmax = self.box_coords[2]
-        lst = filter(lambda a: a.coord[0] >= xmin and \
+        lst = [a for a in m.atom if a.coord[0] >= xmin and \
                      a.coord[0] <= xmax and \
                      a.coord[1] >= ymin and \
                      a.coord[1] <= ymax and \
                      a.coord[2] >= zmin and \
-                     a.coord[2] <= zmax, m.atom)
-        by_id = map(lambda a: a.id, lst)
+                     a.coord[2] <= zmax]
+        by_id = [a.id for a in lst]
         if len(by_id) > 1:
             cmd.select("binding_site", "ID %d" % by_id[0])
             for idx in by_id[1:]:
                 cmd.select("binding_site", "binding_site or ID %d" % idx)
             global_status.set("Selector 'binding_site' created with %d atoms" % len(by_id))
             self.import_selections()
-        
+
     def box_display_cylinder_size_changed(self, x):
         val=float(self.box_display_cylinder_size.get())+float(x)*0.1
         self.box_display_cylinder_size.set(val)
@@ -1549,7 +1553,7 @@ class Autodock:
 
     def show_box(self):
         self.calculate_grid_center()
-        self.show_crisscross()        
+        self.show_crisscross()
         self.calculate_box()
 
     def hide_box(self):
@@ -1557,16 +1561,16 @@ class Autodock:
         cmd.delete("wirebox")
         cmd.delete("grid_center")
         self.box_is_on_display = False
-        
+
     def change_box_color(self):
-        color = tkColorChooser.Chooser(
+        color = tkinter.colorchooser.Chooser(
             initialcolor='white',title='Choose box color').show()
         if color[0] is not None:
             self.box_color = [color[0][0]/100.,
                               color[0][1]/100.,
                               color[0][2]/100.]
         self.show_box()
-        
+
     def set_box_filename(self, filename):
         self.box_file_location.setvalue(filename)
 
@@ -1620,7 +1624,7 @@ class Autodock:
         global_status.set( 'Reading box info from %s' % filename)
         self.grid_center_selection_mode.set(GRID_CENTER_FROM_COORDINATES)
         self.calculate_box()
-            
+
     def save_gpf_file(self):
         global global_status
         filename = self.gpf_file_location.get()
@@ -1634,14 +1638,14 @@ class Autodock:
         center_X = self.grid_center[0].get()
         center_Y = self.grid_center[1].get()
         center_Z = self.grid_center[2].get()
-        print >>fp, 'npts %d %d %d' % (n_points_X, n_points_Y, n_points_Z)
-        print >>fp, 'spacing %5.3f' % spacing
-        print >>fp, 'gridcenter  %8.3f %8.3f %8.3f' % (center_X, center_Y, center_Z)
+        print('npts %d %d %d' % (n_points_X, n_points_Y, n_points_Z), file=fp)
+        print('spacing %5.3f' % spacing, file=fp)
+        print('gridcenter  %8.3f %8.3f %8.3f' % (center_X, center_Y, center_Z), file=fp)
         fp.close()
         global_status.set( 'Wrote box info to %s' % filename)
 
 
-            
+
     def load_config_file(self):
         global global_status
         filename = self.config_file_location.get()
@@ -1681,11 +1685,11 @@ class Autodock:
         global_status.set( 'Reading box info from %s' % filename)
         self.grid_center_selection_mode.set(GRID_CENTER_FROM_COORDINATES)
         self.calculate_box()
-                            
 
 
 
-                            
+
+
     def save_config_file(self):
         global global_status
         filename = self.config_file_location.get()
@@ -1702,15 +1706,15 @@ class Autodock:
         center_x = self.grid_center[0].get()
         center_y = self.grid_center[1].get()
         center_z = self.grid_center[2].get()
-        print >>fp, "size_x = %6.2f" % size_x
-        print >>fp, "size_y = %6.2f" % size_y
-        print >>fp, "size_z = %6.2f" % size_z
-        print >>fp, "center_x = %6.2f" % center_x
-        print >>fp, "center_y = %6.2f" % center_y
-        print >>fp, "center_z = %6.2f" % center_z
+        print("size_x = %6.2f" % size_x, file=fp)
+        print("size_y = %6.2f" % size_y, file=fp)
+        print("size_z = %6.2f" % size_z, file=fp)
+        print("center_x = %6.2f" % center_x, file=fp)
+        print("center_y = %6.2f" % center_y, file=fp)
+        print("center_z = %6.2f" % center_z, file=fp)
         fp.close()
         global_status.set( 'Wrote box info to %s' % filename)
-        
+
     def show_crisscross(self):
         center = [float(self.grid_center[0].get()),
                   float(self.grid_center[1].get()),
@@ -1718,27 +1722,27 @@ class Autodock:
                   ]
         cmd.delete("grid_center")
         self.crisscross(center[0], center[1], center[2], 0.5, "grid_center")
-        
+
     def crisscross(self,x,y,z,d,name="crisscross"):
-        
+
         obj = [
             LINEWIDTH, 3,
-            
+
             BEGIN, LINE_STRIP,
             VERTEX, float(x-d), float(y), float(z),
             VERTEX, float(x+d), float(y), float(z),
             END,
-            
+
             BEGIN, LINE_STRIP,
             VERTEX, float(x), float(y-d), float(z),
             VERTEX, float(x), float(y+d), float(z),
             END,
-            
+
             BEGIN, LINE_STRIP,
             VERTEX, float(x), float(y), float(z-d),
             VERTEX, float(x), float(y), float(z+d),
             END
-            
+
             ]
         view = cmd.get_view()
         cmd.load_cgo(obj,name)
@@ -1792,7 +1796,7 @@ class Autodock:
                         obj.extend(color)
                         obj.append(SPHERE)
                         obj.extend([box[0][i],box[1][j],box[2][k],cylinder_size])
-                        
+
                     if j != 1:
                         obj.append(CYLINDER)
                         obj.extend([box[0][i],box[1][j],box[2][k]])
@@ -1824,7 +1828,7 @@ class Autodock:
         cyl_text(obj,plain,zpos,'Z',0.10,axes=axes)
         cmd.load_cgo(obj,name)
         cmd.set_view(view)
-        
+
 
     def display_wire_box(self, box):
 
@@ -1843,9 +1847,9 @@ class Autodock:
                 obj.append(LINE_STRIP)
                 obj.append(COLOR)
                 obj.extend(color)
-                
+
                 for j in range(zpts):
-                    
+
                     obj.append(VERTEX)
                     obj.extend([box[0][0]+spacing*i,box[1][0]+spacing*k,\
                                 box[2][0]+spacing*j])
@@ -1887,24 +1891,24 @@ class Autodock:
         cmd.load_cgo(obj,"wirebox")
         cmd.set("cgo_line_width",lwidth)
         cmd.set_view(view)
-        
+
     #---------------------------------------------------------------------
     # config functions
     def set_autodock_tools_path(self, dirname):
         self.autodock_tools_location.setvalue(dirname)
         self.autodock_tools_path.set(dirname)
         self.config_settings['autodock_tools_path'] = dirname
-        
+
     def set_autogrid_location(self, filename):
         self.autogrid_location.setvalue(filename)
         self.autogrid_exe.set(filename)
         self.config_settings['autogrid_exe'] = filename
-        
+
     def set_autodock_location(self, filename):
         self.autodock_location.setvalue(filename)
         self.autodock_exe.set(filename)
         self.config_settings['autodock_exe'] = filename
-        
+
     def set_vina_location(self, filename):
         self.vina_location.setvalue(filename)
         self.vina_exe.set(filename)
@@ -1915,7 +1919,7 @@ class Autodock:
 
     def work_dir(self):
         return self.work_path_location.getvalue()
-    
+
     def read_plugin_config_file(self):
         global global_status
         config_file_name = os.path.join(tmp_dir,"pymol_autodock_plugin.conf")
@@ -1940,21 +1944,21 @@ class Autodock:
         else:
             global_status.set('Configuration file not found')
         return self.config_settings
-    
+
     def save_plugin_config_file(self):
         global global_status
         config_file_name = os.path.join(tmp_dir,"pymol_autodock_plugin.conf")
         fp = self.fileopen(config_file_name,'w')
-        print >>fp, '#========================================'
-        print >>fp, '# Autodock/Vina Plugin configuration file'
+        print('#========================================', file=fp)
+        print('# Autodock/Vina Plugin configuration file', file=fp)
         self.config_settings['autogrid_exe'] = self.autogrid_location.getvalue()
         self.config_settings['autodock_exe'] = self.autodock_location.getvalue()
         self.config_settings['vina_exe'] = self.vina_location.getvalue()
         self.config_settings['autodock_tools_path'] = self.autodock_tools_location.getvalue()
         self.config_settings['work_path_location'] = self.work_path_location.getvalue()
-        print 'ADDD', self.autodock_location.getvalue()
-        for key, val in self.config_settings.items():
-            print >>fp, key, '=', val
+        print('ADDD', self.autodock_location.getvalue())
+        for key, val in list(self.config_settings.items()):
+            print(key, '=', val, file=fp)
         fp.close()
         global_status.set('Wrote configuration file %s' % config_file_name)
 
@@ -1975,7 +1979,7 @@ class Autodock:
     def delete_residue(self):
         sel = self.flexible_residues_list.getcurselection()
 
-    
+
     def selectionCommand(self, value):
         sels = self.selection_list.getcurselection()
         ## if len(sels) == 0:
@@ -1987,7 +1991,7 @@ class Autodock:
         sel = self.receptor_list.get()
         receptor_object = self.receptor_dic[sel]
         lst = []
-        for key, val in receptor_object.flexible_residues.items():
+        for key, val in list(receptor_object.flexible_residues.items()):
             for resn, resi in val:
                 lst.append("%s:%4d %s" % (key, resn, resi))
         self.flexible_residues_list.setlist(lst)
@@ -2005,17 +2009,17 @@ class Autodock:
             lst.remove('box')
         self.selection_list.setlist(lst)
         self.ligand_selection_list.setlist(lst)
-        
+
 
     def generate_receptor(self):
         global global_status
-        print self.work_dir()
+        print(self.work_dir())
         sel = self.selection_list.getcurselection()
-        tmp_rec_pdb = os.path.join(self.work_dir(),"receptor.%s.pdb" % sel[0])
-        print tmp_rec_pdb
+        tmp_rec_pdb = os.path.join(self.work_dir(),"%s.receptor.pdb" % sel[0])
+        print(tmp_rec_pdb)
         cmd.save(tmp_rec_pdb,sel[0])
         util_program = os.path.join(self.autodock_tools_path.get(),"prepare_receptor4.py")
-        outfilename = os.path.join(self.work_dir(), "receptor.%s.pdbqt" % sel[0])
+        outfilename = os.path.join(self.work_dir(), "%s.receptor.pdbqt" % sel[0])
         command = "%s -r %s -o %s -A checkhydrogens" % (util_program,tmp_rec_pdb,outfilename)
         self.receptor_page_log_text.insert('end',"Batch: %s\n" % command)
         self.receptor_page_log_text.yview('moveto',1.0)
@@ -2023,8 +2027,8 @@ class Autodock:
         result, output = getstatusoutput(command)
         if result == 0:
             self.receptor_list.insert('end',sel[0])
-            global_status.set("Successfully generated receptor file receptor.%s.pdbqt" % sel[0])
-            #self.receptor_page_log_text.insert('end',"Successfully generated receptor file receptor.%s.pdbqt\n" % sel[0])
+            global_status.set("Successfully generated receptor file %s.receptor.pdbqt" % sel[0])
+            #self.receptor_page_log_text.insert('end',"Successfully generated receptor file %s.receptor.pdbqt\n" % sel[0])
             self.receptor_page_log_text.insert('end',output)
             self.receptor_page_log_text.yview('moveto',1.0)
             r = Receptor()
@@ -2039,11 +2043,11 @@ class Autodock:
             self.receptor_list.selectitem(-1)
             self.docking_receptor_rigid_list.insert('end',sel[0])
             self.docking_receptor_rigid_list.selectitem(-1)
-            
+
         else:
             global_status.set("An error occured while preparing receptor from selection %s" % sel[0])
             self.receptor_page_log_text.insert('end',output)
-            
+
     def select_flexible_residues(self):
         global global_status
         sel = self.selection_list.get()
@@ -2055,7 +2059,7 @@ class Autodock:
         chains = {}
         for chain, resn, resi in stored.list:
             if resn not in ['ALA','GLY','PRO']:
-                if chains.has_key(chain):
+                if chain in chains:
                     chains[chain].append([int(resi), resn])
                 else:
                     chains[chain] = [ [int(resi), resn] ]
@@ -2087,7 +2091,7 @@ class Autodock:
             global_status.set("An error occured while preparing a flexible receptor from selection %s" % sel)
             self.receptor_page_log_text.insert('end',output)
         self.receptor_page_log_text.yview('moveto',1.0)
-           
+
 
     def set_receptor_pdbqt_location(self, filename):
         self.receptor_pdbqt_location.setvalue(filename)
@@ -2121,13 +2125,13 @@ class Autodock:
             self.receptor_list.selectitem(-1)
             self.docking_receptor_rigid_list.insert('end',name)
             self.docking_receptor_rigid_list.selectitem(-1)
-            
+
         else:
             global_status.set("An error occured while loading receptor  %s" % fn)
             self.receptor_page_log_text.insert('end',output)
-            
 
-        
+
+
     def remove_receptor(self):
         global global_status
         rec = self.receptor_list.get()
@@ -2142,7 +2146,7 @@ class Autodock:
         except:
             self.receptor_list.clear()
             self.docking_receptor_list.clear()
-            
+
     def remove_flexible_residues(self):
         global global_status
         rec = self.receptor_list.get()
@@ -2152,17 +2156,17 @@ class Autodock:
         rec_object.receptor_flexible = ""
         global_status.set("Removed flexible residues from receptor %s" % rec)
         self.selected_receptor(rec)
-        
+
     def remove_all_receptors(self):
         global global_status
         self.receptor_dic = {}
         global_status.set("Deleted all receptor objects")
         self.receptor_list.clear()
         self.flexible_residues_list.clear()
-    
+
     #------------------------------------------------------------------------------
     # ligands
-    
+
     def save_as_ligand_pdb(self, name):
         global global_status
         pdb_name = os.path.join(self.work_dir(), name+'.ligand.pdb')
@@ -2200,7 +2204,7 @@ class Autodock:
             self.ligand_page_log_text.insert('end',output)
         self.ligand_page_log_text.yview('moveto',1.0)
 
- 
+
     def ligand_info(self, sel):
         try:
             sel = self.ligand_pdbqt_list.getcurselection()[0]
@@ -2208,7 +2212,7 @@ class Autodock:
             sel = self.ligand_list.getcurselection()[0]
         self.ligand_page_log_text.insert('end',self.ligand_dic[sel].info())
         self.ligand_page_log_text.yview('moveto',1.0)
-        
+
 
     def remove_ligand(self):
         global global_status
@@ -2247,8 +2251,8 @@ class Autodock:
         cmd.load(ligand_input)
         self.ligand_page_log_text.insert('end',string)
         self.ligand_page_log_text.yview('moveto',1.0)
-            
-        
+
+
     def remove_all_ligands(self):
         global global_status
         self.ligand_dic = {}
@@ -2260,7 +2264,7 @@ class Autodock:
     def set_ligand_dir_location(self, dirname):
         pth = self.ligand_dir_location.setvalue(dirname)
         self.ligand_dir.set(dirname)
-        
+
     def import_ligands(self):
         global global_status
         pth = self.ligand_dir.get()
@@ -2268,7 +2272,11 @@ class Autodock:
               +glob(os.path.join(pth,"*.mol2"))\
               +glob(os.path.join(pth,"*.pdbqt"))
         self.ligand_dic['VS_DIR'] = pth
+
         self.multiple_ligands = True
+
+        self.ligand_dic['None'] = Ligand()
+        self.ligand_dic['None'].name = 'None'
 
         for f in lst:
             l = Ligand()
@@ -2295,7 +2303,7 @@ class Autodock:
 
     def generate_all_ligands(self):
         self.multiple_ligands = True
-        for key, ligand in self.ligand_dic.items():
+        for key, ligand in list(self.ligand_dic.items()):
             if key !='VS_DIR':
                 self.ligand_list.selectitem(key)
                 self.generate_ligand()
@@ -2334,7 +2342,7 @@ class Autodock:
         page = page + (' > LIGAND(s)         : %s\n' % ligands)
         if ligands == 'All':
             page = page+(' > LIGAND VS-DIR      : %s\n' % pth)
-        
+
         n_points_X = self.n_points_X.get()
         n_points_Y = self.n_points_Y.get()
         n_points_Z = self.n_points_Z.get()
@@ -2354,9 +2362,9 @@ class Autodock:
         template_gpf = os.path.join(self.work_dir(),'template.gpf')
         outfile_gpf = rec+'.gpf'
         fp = self.fileopen(template_gpf,'w')
-        print >>fp, 'npts %d %d %d' % (n_points_X, n_points_Y, n_points_Z)
-        print >>fp, 'spacing %5.3f' % spacing
-        print >>fp, 'gridcenter  %8.3f %8.3f %8.3f' % (center_X, center_Y, center_Z)
+        print('npts %d %d %d' % (n_points_X, n_points_Y, n_points_Z), file=fp)
+        print('spacing %5.3f' % spacing, file=fp)
+        print('gridcenter  %8.3f %8.3f %8.3f' % (center_X, center_Y, center_Z), file=fp)
         fp.close()
         util_program = os.path.join(self.autodock_tools_path.get(),"prepare_gpf4.py")
         command = "%s -r %s -i %s -o %s" % (util_program, rigid_receptor_file, template_gpf, outfile_gpf)
@@ -2401,7 +2409,7 @@ class Autodock:
             transfer_status['line_count'] = transfer_status['line_count'] + 1
             transfer_docking_text['log'] = transfer_docking_text['log']+ output
             transfer_docking_text['line_count'] = transfer_docking_text['line_count'] + 1
-        self.docking_page_log_text.yview('moveto',1.0)            
+        self.docking_page_log_text.yview('moveto',1.0)
 
 
 
@@ -2442,11 +2450,11 @@ class Autodock:
         page = page + (' > # POSES      : %d \n' % nposes)
         transfer_docking_text['log'] = page
         transfer_docking_text['line_count'] = transfer_docking_text['line_count']+15
-        
+
         template_dpf = os.path.join(self.work_dir(),'template.dpf')
 
         fp = self.fileopen(template_dpf,'w')
-        print >>fp, 'ga_run %d ' % (nposes)
+        print('ga_run %d ' % (nposes), file=fp)
         fp.close()
 
         util_program = os.path.join(self.autodock_tools_path.get(),"prepare_dpf4.py")
@@ -2468,10 +2476,10 @@ class Autodock:
                 transfer_docking_text['line_count'] = transfer_docking_text['line_count']+1
                 self.docking_page_log_text.yview('moveto', 1.0)
                 if write_only:
-                    return 
+                    return
                 autodock = self.autodock_exe.get()
                 outfile_poses = outfile_dpf.split('.')[0]+'.dlg'
-                self.ligand_dic[ligands].outfile_poses = outfile_poses 
+                self.ligand_dic[ligands].outfile_poses = outfile_poses
                 command = '%s -p %s -l %s' % (autodock, outfile_dpf, outfile_poses)
                 try:
                     if os.path.isfile(outfile_poses):
@@ -2493,17 +2501,17 @@ class Autodock:
                 transfer_docking_text['log'] = transfer_docking_text['log']+output
                 transfer_docking_text['line_count'] = transfer_docking_text['line_count']+1
                 self.docking_page_log_text.yview('moveto', 1.0)
-                
+
         else:
             ligand_list = []
-            for lig in self.ligand_dic.values():
+            for lig in list(self.ligand_dic.values()):
                 if hasattr(lig,"ligand_pdbqt") and  lig.ligand_pdbqt!='':
                                     ligand_list.append(lig)
             for idx in range(len(ligand_list)):
                 self.docking_ligand_list.selectitem(idx+1)
                 self.run_autodock(write_only = write_only)
         self.docking_page_log_text.yview('moveto',1.0)
-            
+
 
     def run_vina(self, write_only = False):
         global transfer_status
@@ -2551,6 +2559,8 @@ class Autodock:
         ligands = self.docking_ligand_list.get()
         if ligands == 'All':
             pth = self.ligand_dic['VS_DIR']
+        elif ligands == 'None':
+            lig_pdbqt = 'dummy'
         else:
             lig_pdbqt = self.ligand_dic[ligands].ligand_pdbqt
         page = page + (' > LIGAND(s)         : %s\n' % ligands)
@@ -2567,32 +2577,39 @@ class Autodock:
 
 
         if ligands!='All':
+
             outfile_conf = os.path.join(self.work_dir(), ligands+'.vina_config.txt')
             outfile_log = os.path.join(self.work_dir(),ligands+'.vina.log')
             outfile_poses = os.path.join(self.work_dir(),ligands+'.docked.pdbqt')
-            self.ligand_dic[ligands].outfile_poses = outfile_poses
-            self.ligand_dic[ligands].outfile_log = outfile_log
-            self.ligand_dic[ligands].vina_conf = outfile_conf
             fp = self.fileopen(outfile_conf,'w')
-            print >>fp, "receptor = %s" % rigid_receptor_file
-            if flex_receptor_file is not None:
-                    print >>fp, "flex = %s" % flex_receptor_file
-            print >>fp, "ligand = %s" % lig_pdbqt
-            print >>fp, "center_x = %s" % center_X
-            print >>fp, "center_y = %s" % center_Y
-            print >>fp, "center_z = %s" % center_Z
-            print >>fp, "size_x = %6.2f" % size_X
-            print >>fp, "size_y = %6.2f" % size_Y
-            print >>fp, "size_z = %6.2f" % size_Z
-            print >>fp, "out = %s" % outfile_poses
-            print >>fp, "log = %s" % outfile_log
-            print >>fp, "num_modes = %d" % nposes
+
+            print("center_x = %s" % center_X, file=fp)
+            print("center_y = %s" % center_Y, file=fp)
+            print("center_z = %s" % center_Z, file=fp)
+            print("size_x = %6.2f" % size_X, file=fp)
+            print("size_y = %6.2f" % size_Y, file=fp)
+            print("size_z = %6.2f" % size_Z, file=fp)
+            if write_only is not 'talos':
+                self.ligand_dic[ligands].vina_conf = outfile_conf
+
+                print("num_modes = %d" % nposes, file=fp)
+                print("receptor = %s" % rigid_receptor_file, file=fp)
+                print("ligand = %s" % lig_pdbqt, file=fp)
+                if flex_receptor_file is not None:
+                        print("flex = %s" % flex_receptor_file, file=fp)
+                self.ligand_dic[ligands].outfile_poses = outfile_poses
+                print("out = %s" % outfile_poses, file=fp)
+                self.ligand_dic[ligands].outfile_log = outfile_log
+                print("log = %s" % outfile_log, file=fp)
+            else:
+                print("receptor = %s" % os.path.basename(rigid_receptor_file), file=fp)
             fp.close()
             transfer_status['log'] = "Wrote VINA input file for ligand: %s" % ligands
             transfer_status['line_count'] = transfer_status['line_count']+1
             self.docking_page_log_text.yview('moveto', 1.0)
+
             if write_only:
-                return 
+                return
             vina = self.vina_exe.get()
             command = '%s --config %s' % (vina, outfile_conf)
             try:
@@ -2613,7 +2630,7 @@ class Autodock:
 
         else:
             ligand_list = []
-            for lig in self.ligand_dic.values():
+            for lig in list(self.ligand_dic.values()):
                 if hasattr(lig,"ligand_pdbqt") and  lig.ligand_pdbqt!='':
                     ligand_list.append(lig)
             for idx in range(len(ligand_list)):
@@ -2621,18 +2638,20 @@ class Autodock:
                 self.run_vina(write_only = write_only)
 
         self.docking_page_log_text.yview('moveto',1.0)
-                        
-                                
+
+
     def write_autodock_input_files(self):
         self.run_autodock(write_only = True)
     def write_vina_input_files(self):
         self.run_vina(write_only = True)
-            
+    def write_vina_talos(self):
+        self.run_vina(write_only = 'talos')
+
 
 
     #-------------------------------------------------------------------
     # view poses
-    
+
 
     def set_pose_filename(self, filename):
         self.pose_file_location.setvalue(filename)
@@ -2652,7 +2671,7 @@ class Autodock:
 
     def load_all_ligand_files(self):
         lst = []
-        for name, ligand in self.ligand_dic.items():
+        for name, ligand in list(self.ligand_dic.items()):
             if name != 'VS_DIR' and ligand.outfile_poses!='':
                 lst.append(ligand.outfile_poses)
         for f in lst:
@@ -2681,12 +2700,12 @@ class Autodock:
                         modlist.append(newmod)
                         break
         pose_list = []
-            
+
         for m in modlist:
             model = ADModel(lst = m)
             model.name = name
             pose_list.append(model)
-            
+
         pose_list.sort(lambda a, b: cmp(a.energy, b.energy))
         self.pose_viewer_ligand_dic[name] = {}
         for i in range(len(pose_list)):
@@ -2717,12 +2736,12 @@ class Autodock:
             pose_list.append(model)
            # print 'done pose list'
         pose_list.sort(lambda a, b: cmp(a.energy, b.energy))
-            
+
         self.pose_viewer_ligand_dic[name] = {}
         for i in range(len(pose_list)):
             pose_list[i].poseN = i+1
             self.pose_viewer_ligand_dic[name].update({name+'::%d'%(i+1):pose_list[i]})
-            
+
         self.update_combo(name)
 
 
@@ -2733,7 +2752,7 @@ class Autodock:
         except:
             pass
         self.pose_viewer_ligand_pages[name] = {'name':self.pose_viewer_notebook.add(name)}
-        pose_list = self.pose_viewer_ligand_dic[name].keys()
+        pose_list = list(self.pose_viewer_ligand_dic[name].keys())
 
         pose_list.sort(lambda a,b: cmp(int(a.split('::')[1]), int(b.split('::')[1])))
         self.pose_viewer_ligand_pages[name].update( {'poses':pose_list} )
@@ -2742,7 +2761,7 @@ class Autodock:
         self.pose_viewer_buttonbox.add('Show best 10' ,command=self.show_best_poses)
         self.pose_viewer_buttonbox.add('Show all' ,command=self.show_all_poses)
         self.pose_viewer_buttonbox.add('Hide all' ,command=self.hide_all_poses)
-        self.pose_viewer_buttonbox.add('Delete',command=self.delete_ligand)        
+        self.pose_viewer_buttonbox.add('Delete',command=self.delete_ligand)
         self.pose_viewer_buttonbox.pack(fill='x',side=TOP)
         self.pose_viewer_buttonbox.alignbuttons()
         self.pose_viewer_ligand_pages[name]['combo'] = Pmw.ComboBox(self.pose_viewer_ligand_pages[name]['name'],
@@ -2756,7 +2775,7 @@ class Autodock:
         self.pose_viewer_ligand_pages[name]['combo'].pack(side='left', padx=3, anchor='n')
 
         self.pose_viewer_ligand_pages[name]['text'] = Pmw.ScrolledText(self.pose_viewer_ligand_pages[name]['name'],
-                                                                borderframe=5, 
+                                                                borderframe=5,
                                                                 vscrollmode='dynamic',
                                                                 hscrollmode='dynamic',
                                                                 labelpos='n',
@@ -2780,7 +2799,7 @@ class Autodock:
             ligand = self.pose_viewer_ligand_dic[name][str(value)]
             cmd.read_pdbstr(ligand.as_pdb_string(),str(value))
             pmlname = value.replace(' ','_').replace('::','_')
-            for key, val in self.ligand_display_mode.items():
+            for key, val in list(self.ligand_display_mode.items()):
         #        print key, val
                 if val == True:
                     cmd.show(key,pmlname)
@@ -2790,7 +2809,7 @@ class Autodock:
                     #            cmd.zoom(str(value))
             text = 'Docked Energy: %8.2f kcal/mol' % ligand.energy
             global_status.set(text)
-                
+
             self.pose_viewer_ligand_pages[name]['text'].clear()
             self.pose_viewer_ligand_pages[name]['text'].insert('end',ligand.info_string())
         else:
@@ -2820,7 +2839,7 @@ class Autodock:
 #           cmd.delete(pmlname+'.*')
         cmd.delete(name+'_*')
         global_status.set('Deleted all poses %s' % name)
-           
+
     def delete_ligand(self):
         global global_status
         name = self.pose_viewer_notebook.getcurselection()
@@ -2834,13 +2853,13 @@ class Autodock:
 
     def make_complete_ligand_list(self):
         self.all_ligands = []
-        for key, val in self.pose_viewer_ligand_dic.items():
-            self.all_ligands.extend(val.values())
+        for key, val in list(self.pose_viewer_ligand_dic.items()):
+            self.all_ligands.extend(list(val.values()))
         self.sort_complete_ligand_list()
-        
+
     def sort_complete_ligand_list(self):
         self.all_ligands.sort(lambda a, b: cmp(a.energy, b.energy))
-        
+
     def select_best_poses(self):
         self.sort_complete_ligand_list()
         self.best_ligand_list = []
@@ -2859,7 +2878,7 @@ class Autodock:
             self.select_best_poses()
             self.score_table.resetTable()
             self.score_table.updateView(self.best_ligand_list)
-            
+
     def export_score_dat_file(self):
         global global_status
         what = self.score_table_radiobuttons.getvalue()
@@ -2869,13 +2888,13 @@ class Autodock:
             ligand_list = self.all_ligands
         elif what == 'Show Only Best Pose':
             ligand_list = self.best_ligand_list
-        print >>fp,"# RANK         NAME              POSE #   SCORE"
+        print("# RANK         NAME              POSE #   SCORE", file=fp)
         for i, ligand in enumerate(ligand_list):
-            print >>fp, "%8d %20s %5d %8.3f" % \
-                  (i+1, ligand.name, ligand.poseN, ligand.energy)
+            print("%8d %20s %5d %8.3f" % \
+                  (i+1, ligand.name, ligand.poseN, ligand.energy), file=fp)
         global_status.set("Exported docking results to %s" % filename)
-            
-        
+
+
     def export_score_csv_file(self):
         global global_status
         what = self.score_table_radiobuttons.getvalue()
@@ -2885,10 +2904,10 @@ class Autodock:
             ligand_list = self.all_ligands
         elif what == 'Show Only Best Pose':
             ligand_list = self.best_ligand_list
-        print >>fp, "RANK,      NAME,       POSE,      SCORE"
+        print("RANK,      NAME,       POSE,      SCORE", file=fp)
         for i, ligand in enumerate(ligand_list):
-            print >>fp, "%8d, %20s, %5d, %8.3f" % \
-                  (i+1, ligand.name, ligand.poseN, ligand.energy)
+            print("%8d, %20s, %5d, %8.3f" % \
+                  (i+1, ligand.name, ligand.poseN, ligand.energy), file=fp)
         global_status.set("Exported docking results to %s" % filename)
 
     def export_score_pose_file(self):
@@ -2900,16 +2919,16 @@ class Autodock:
             ligand_list = self.all_ligands
         elif what == 'Show Only Best Pose':
             ligand_list = self.best_ligand_list
-        print >>fp, "TITLE      DOCKING POSES    "
+        print("TITLE      DOCKING POSES    ", file=fp)
         for i, ligand in enumerate(ligand_list):
-            print >>fp, "MODEL%5d" % (i+1)
-            print >>fp, "REMARK    ligand: %s" % ligand.name
-            print >>fp, "REMARK    pose #: %d" % ligand.poseN
-            print >>fp, "REMARK    energy: %8.3f" % ligand.energy
-            print >>fp, ligand.as_string.rstrip()
-            print >>fp, "ENDMDL"
+            print("MODEL%5d" % (i+1), file=fp)
+            print("REMARK    ligand: %s" % ligand.name, file=fp)
+            print("REMARK    pose #: %d" % ligand.poseN, file=fp)
+            print("REMARK    energy: %8.3f" % ligand.energy, file=fp)
+            print(ligand.as_string.rstrip(), file=fp)
+            print("ENDMDL", file=fp)
         global_status.set("Exported docking poses to %s" % filename)
-            
+
 
     #-------------------------------------------
     # maps
@@ -2932,7 +2951,7 @@ class Autodock:
             name = fn
         mp = ADGridMap(fp,name)
         fname = os.path.basename(name)
-        
+
         global_status.set('Loading map %s' % fn)
         tmpn = os.path.join(self.work_dir(),fname+'.dx')
         mp.writeDX(tmpn)
@@ -2964,7 +2983,7 @@ class Autodock:
         global_status.set('Loading Map %s' % fn)
         cmd.set_view(view)
         self.status_mapbox(map_key)
-        
+
     def display_map(self,mapname,map_dic):
         view = cmd.get_view()
         surfname = mapname+'.'+"%2.1f" % map_dic['thresh']
@@ -2989,7 +3008,7 @@ class Autodock:
         self.map_meta[surfname] = info
         cmd.set_view(view)
 
-        
+
     def create_surface(self):
         name = self.map_viewer_notebook.getcurselection()
         thresh = float(self.map_threshold[name].get())
@@ -2999,7 +3018,7 @@ class Autodock:
             mode = 'isosurface'
         elif self.map_radiobuttons.getvalue()=='isomesh':
             mode = 'isomesh'
-        if self.map_dic[name].has_key(surfname):
+        if surfname in self.map_dic[name]:
             mmp = self.map_dic[name][surfname]
         else:
             self.map_dic[name].update({surfname:{
@@ -3015,7 +3034,7 @@ class Autodock:
         self.map_radiobuttons.setvalue(mode)
         self.map_pages[name]['combo'].selectitem(-1)
         self.status_mapbox(surfname)
-            
+
     def delete_surface(self):
         global global_status
         name = self.map_viewer_notebook.getcurselection()
@@ -3029,9 +3048,9 @@ class Autodock:
             self.map_pages[name]['combo'].selectitem(0)
         except:
             pass
-        
+
     def select_map_color(self):
-        color = tkColorChooser.Chooser(
+        color = tkinter.colorchooser.Chooser(
             initialcolor='red',title='Choose map color').show()
         if color[0] is not None:
             self.map_color = [color[0][0]/255.,
@@ -3042,7 +3061,7 @@ class Autodock:
     def delete_map(self):
         name = self.map_viewer_notebook.getcurselection()
         #print name
-        for mp in self.map_dic[name].keys():
+        for mp in list(self.map_dic[name].keys()):
             cmd.delete(mp)
         cmd.delete(name+'*')
         del  self.map_pages[name]
@@ -3064,17 +3083,17 @@ class Autodock:
         self.map_pages[name] = {'name':self.map_viewer_notebook.add(name)}
 #        self.map_pages[name].update({'maps':self.map_dic.keys()})
 
-        self.upper_part = Tkinter.Frame(self.map_pages[name]['name'])
-        self.lower_part = Tkinter.Frame(self.map_pages[name]['name'])
+        self.upper_part = tkinter.Frame(self.map_pages[name]['name'])
+        self.lower_part = tkinter.Frame(self.map_pages[name]['name'])
         self.upper_part.pack(side=TOP)
         self.lower_part.pack(side=BOTTOM)
 
-        self.upper_part1 = Tkinter.Frame(self.upper_part)
-        self.upper_part2 = Tkinter.Frame(self.upper_part)
+        self.upper_part1 = tkinter.Frame(self.upper_part)
+        self.upper_part2 = tkinter.Frame(self.upper_part)
         self.upper_part1.pack(side=TOP, fill='x')
         self.upper_part2.pack(side=BOTTOM, fill='x')
 
-        self.map_thresholdfr = Tkinter.Frame(self.upper_part1)
+        self.map_thresholdfr = tkinter.Frame(self.upper_part1)
         labmap_threshold = Label(self.map_thresholdfr,text="Threshold:");
         self.map_thresholdloc = Entry(self.map_thresholdfr,textvariable=self.map_threshold[name],bg='black',fg='green',width=15);
         self.scrmap_threshold=Scrollbar(self.map_thresholdfr,orient="horizontal",command=self.change_map_threshold)
@@ -3084,19 +3103,19 @@ class Autodock:
         self.scrmap_threshold.pack(side=LEFT)
         self.map_thresholdfr.pack(fill='x',padx=4,pady=3, side=LEFT) # vertical
 
-        
+
         self.map_buttonbox = Pmw.ButtonBox(self.upper_part2, padx=3)
 
         self.map_buttonbox.add('Create Surface',command=self.create_surface)
-        self.map_buttonbox.add('Delete Surface',command=self.delete_surface)        
-        self.map_buttonbox.add('Color',command=self.select_map_color)        
-        self.map_buttonbox.add('Delete Map',command=self.delete_map)        
+        self.map_buttonbox.add('Delete Surface',command=self.delete_surface)
+        self.map_buttonbox.add('Color',command=self.select_map_color)
+        self.map_buttonbox.add('Delete Map',command=self.delete_map)
         self.map_buttonbox.pack(fill='x',side=LEFT,pady=3)
         self.map_buttonbox.alignbuttons()
         self.map_pages[name]['combo'] = Pmw.ComboBox(self.lower_part,
                                                      label_text='Representations',
                                                      labelpos='nw',
-                                                     scrolledlist_items= self.map_dic[name].keys(),
+                                                     scrolledlist_items= list(self.map_dic[name].keys()),
                                                      selectioncommand=self.status_mapbox,
                                                      listbox_height=15,
                                                      listbox_width=1,
@@ -3105,7 +3124,7 @@ class Autodock:
 
 
         self.map_pages[name]['text'] = Pmw.ScrolledText(self.lower_part,
-                                                        borderframe=5, 
+                                                        borderframe=5,
                                                         vscrollmode='dynamic',
                                                         hscrollmode='dynamic',
                                                         labelpos='n',
@@ -3154,10 +3173,10 @@ class Autodock:
             fp = open(filename,mode)
             return fp
         except:
-            tkMessageBox.showerror('Error','Could not open file %s' % filename)
-            return None               
+            tkinter.messagebox.showerror('Error','Could not open file %s' % filename)
+            return None
 
-    
+
 #==========================================================
 #
 #     FOREIGN DIALOG CLASSES
@@ -3177,7 +3196,7 @@ class Autodock:
 #    'info' is specified, the text given will be shown (in blue).
 #    Modified example to show both file and directory-type dialog
 #
-# No Guarantees. Distribute Freely. 
+# No Guarantees. Distribute Freely.
 # Please send bug-fixes/patches/features to <r.hooft@euromail.com>
 #
 ################################################################################
@@ -3194,21 +3213,21 @@ class FileDialogButtonClassFactory:
         """This returns a FileDialogButton class that will
         call the specified function with the resulting file.
         """
-        class FileDialogButton(Tkinter.Button):
+        class FileDialogButton(tkinter.Button):
             # This is just an ordinary button with special colors.
 
             def __init__(self, master=None, cnf={}, **kw):
                 '''when we get a file, we call fn(filename)'''
                 self.fn = fn
                 self.__toggle = 0
-                apply(Tkinter.Button.__init__, (self, master, cnf), kw)
+                tkinter.Button.__init__(*(self, master, cnf), **kw)
                 self.configure(command=self.set)
             def set(self):
                 if mode == 'r':
                     n = MyFileDialog(types = filter).getopenfile()
                 elif mode == 'w':
                     n = MyFileDialog(types = filter).getsavefile()
-                    
+
 #                n = MyFileDialog().get()
 #                fd = PmwFileDialog(self.master,filter=filter)
 #                fd.title('Please choose a file')
@@ -3223,14 +3242,14 @@ class DirDialogButtonClassFactory:
         """This returns a FileDialogButton class that will
         call the specified function with the resulting file.
         """
-        class DirDialogButton(Tkinter.Button):
+        class DirDialogButton(tkinter.Button):
             # This is just an ordinary button with special colors.
 
             def __init__(self, master=None, cnf={}, **kw):
                 '''when we get a file, we call fn(filename)'''
                 self.fn = fn
                 self.__toggle = 0
-                apply(Tkinter.Button.__init__, (self, master, cnf), kw)
+                tkinter.Button.__init__(*(self, master, cnf), **kw)
                 self.configure(command=self.set)
             def set(self):
                 fd = PmwDirDialog(self.master)
@@ -3247,27 +3266,27 @@ class MyFileDialog:
         self.types = types
 
     def getopenfile(self):
-        result = tkFileDialog.askopenfilename(filetypes=self.types)
+        result = tkinter.filedialog.askopenfilename(filetypes=self.types)
         if result == "":
             return None
         else:
             return result
     def getsavefile(self):
-        result = tkFileDialog.asksaveasfilename(filetypes=self.types)
+        result = tkinter.filedialog.asksaveasfilename(filetypes=self.types)
         if result == "":
             return None
         else:
             return result
-        
+
 def _errorpop(master,text):
     d=Pmw.MessageDialog(master,
-                        title="Error", 
+                        title="Error",
                         message_text=text,
                         buttons=("OK",))
     d.component('message').pack(ipadx=15,ipady=15)
     d.activate()
     d.destroy()
-    
+
 class PmwFileDialog(Pmw.Dialog):
     """File Dialog using Pmw"""
     def __init__(self, parent = None, **kw):
@@ -3336,7 +3355,7 @@ class PmwFileDialog(Pmw.Dialog):
         return self.createcomponent(
                 'infobox',
                 (), None,
-                Tkinter.Label, (self.interior(),),
+                tkinter.Label, (self.interior(),),
                 width=51,
                 relief='groove',
                 foreground='darkblue',
@@ -3404,13 +3423,13 @@ class PmwFileDialog(Pmw.Dialog):
             selectioncommand=self.setfilename,
             labelpos='w',
             label_text='Filename:')
-    
+
     def dirvalidate(self,string):
         if os.path.isdir(string):
             return Pmw.OK
         else:
             return Pmw.PARTIAL
-        
+
     def filevalidate(self,string):
         if string=='':
             return Pmw.PARTIAL
@@ -3420,7 +3439,7 @@ class PmwFileDialog(Pmw.Dialog):
             return Pmw.PARTIAL
         else:
             return Pmw.OK
-        
+
     def okbutton(self):
         """OK action: user thinks he has input valid data and wants to
            proceed. This is also called by <Return> in the filename entry"""
@@ -3436,7 +3455,7 @@ class PmwFileDialog(Pmw.Dialog):
         self.deactivate()
 
     def tidy(self,w,v):
-        """Insert text v into the entry and at the top of the list of 
+        """Insert text v into the entry and at the top of the list of
            the combobox w, remove duplicates"""
         if not v:
             return
@@ -3460,7 +3479,7 @@ class PmwFileDialog(Pmw.Dialog):
         value=os.path.join(self['directory'],value)
         dir,fil=os.path.split(value)
         self.configure(directory=dir,filename=value)
-        
+
         c=self['command']
         if callable(c):
             c()
@@ -3468,7 +3487,7 @@ class PmwFileDialog(Pmw.Dialog):
     def newfilename(self):
         """Make sure a newly set filename makes it into the combobox list"""
         self.tidy(self.component('filename'),self['filename'])
-        
+
     def setfilter(self,value):
         self.configure(filter=value)
 
@@ -3518,8 +3537,8 @@ class PmwFileDialog(Pmw.Dialog):
 
     def askfilename(self,directory=None,filter=None):
         """The actual client function. Activates the dialog, and
-           returns only after a valid filename has been entered 
-           (return value is that filename) or when canceled (return 
+           returns only after a valid filename has been entered
+           (return value is that filename) or when canceled (return
            value is None)"""
         if directory!=None:
             self.configure(directory=directory)
@@ -3552,7 +3571,7 @@ class PmwFileDialog(Pmw.Dialog):
         try:
             fl=os.listdir(dir)
             fl.sort()
-        except os.error,arg:
+        except os.error as arg:
             if arg[0] in (2,20):
                 return
             raise
@@ -3567,11 +3586,11 @@ class PmwFileDialog(Pmw.Dialog):
                     files.append(f)
         self.component('filenamebox').setlist(files)
         self.component('dirnamebox').setlist(dirs)
-    
+
     def validate(self,filename):
-        """Validation function. Should return 1 if the filename is valid, 
-           0 if invalid. May pop up dialogs to tell user why. Especially 
-           suited to subclasses: i.e. only return 1 if the file does/doesn't 
+        """Validation function. Should return 1 if the filename is valid,
+           0 if invalid. May pop up dialogs to tell user why. Especially
+           suited to subclasses: i.e. only return 1 if the file does/doesn't
            exist"""
         return 1
 
@@ -3581,7 +3600,7 @@ class PmwExistingFileDialog(PmwFileDialog):
             return Pmw.OK
         else:
             return Pmw.PARTIAL
-        
+
     def validate(self,filename):
         if os.path.isfile(filename):
             return 1
@@ -3654,7 +3673,7 @@ class PmwDirDialog(PmwFileDialog):
         try:
             fl=os.listdir(dir)
             fl.sort()
-        except os.error,arg:
+        except os.error as arg:
             if arg[0] in (2,20):
                 return
             raise
@@ -3671,11 +3690,11 @@ class PmwDirDialog(PmwFileDialog):
         if self.validate(fn):
             self.canceled=0
             self.deactivate()
-    
+
     def askfilename(self,directory=None):
         """The actual client function. Activates the dialog, and
-           returns only after a valid filename has been entered 
-           (return value is that filename) or when canceled (return 
+           returns only after a valid filename has been entered
+           (return value is that filename) or when canceled (return
            value is None)"""
         if directory!=None:
             self.configure(directory=directory)
@@ -3695,9 +3714,9 @@ class PmwDirDialog(PmwFileDialog):
             return Pmw.OK
 
     def validate(self,filename):
-        """Validation function. Should return 1 if the filename is valid, 
-           0 if invalid. May pop up dialogs to tell user why. Especially 
-           suited to subclasses: i.e. only return 1 if the file does/doesn't 
+        """Validation function. Should return 1 if the filename is valid,
+           0 if invalid. May pop up dialogs to tell user why. Especially
+           suited to subclasses: i.e. only return 1 if the file does/doesn't
            exist"""
         if filename=='':
             _errorpop(self.interior(),"Empty filename")
@@ -3706,7 +3725,7 @@ class PmwDirDialog(PmwFileDialog):
             return 1
         else:
             _errorpop(self.interior(),"This is not a directory")
-            return 0        
+            return 0
 
 
 
@@ -3725,7 +3744,7 @@ class Tail(object):
                the beginning of the file when first opened. Set only_new to
                True to have it skip to the end when it first opens, so that
                you only get the new additions that arrive after you start
-               monitoring. 
+               monitoring.
              min_sleep: Shortest interval in seconds to sleep when waiting
                for more input to arrive. Defaults to 1.0 second.
              sleep_interval: The tail monitor will dynamically recompute an
@@ -3834,7 +3853,7 @@ class Tail(object):
         line = self._dequeue()
         if line:
             return line
-        
+
         # ok, we are out of cache; let's get some lines from the file
         if self._fill_cache() > 0:
             # got some
@@ -3870,7 +3889,7 @@ class Tail(object):
         """
         return self
 
-    def next(self):
+    def __next__(self):
         """Kick the iterator interface. Used under the covers to support:
 
         for line in filetail.Tail('log.txt'):
@@ -3891,7 +3910,7 @@ class TableCell( Label ):
 
     def __init__(self, *args, **kwargs):
 
-        apply(Label.__init__,((self,)+args), self.params)
+        Label.__init__(*((self,)+args), **self.params)
         self.bind("<Enter>", self.on_enter)
         self.bind("<Leave>", self.on_leave)
         self.bind("<ButtonRelease-1>", self.on_clicked)
@@ -3918,20 +3937,20 @@ class TableCell( Label ):
 
     def on_clicked(self, event):
 
-        for col in xrange(0,len(ScoreTable.fields)):
+        for col in range(0,len(ScoreTable.fields)):
             self.entry[self.row][col]["bg"] = self.SELECTED
             if self.table.selected != -1:
                 self.entry[self.table.selected][col]["bg"] = self.UNSELECTED
 
         self.table.on_select(self.row)
-        
+
 
 
 class ScoreTable(Frame):
 
     fields = {0:"Rank",1:"Ligand",2:"Pose #",3:"Score"}
 
-    width = [10,30,10,20] 
+    width = [10,30,10,20]
 
     def __init__(self, parent, rows=16, cols = len(fields), command = None):
 
@@ -3957,7 +3976,7 @@ class ScoreTable(Frame):
         self.lastVisible = self.windowSize - 1
         self.yscrollbar.set(0.0,1.0)
 #        self.createTable(self.rows, self.cols)
-        
+
     def updateScrollbar(self):
 
         top = float(self.firstVisible)/float(self.rows)
@@ -3965,17 +3984,17 @@ class ScoreTable(Frame):
         self.yscrollbar.set(top, bottom)
 
     def createTable(self, rows, cols):
-        
+
         global adplugin_font
 
-        for col in xrange(0, len(self.fields)):
+        for col in range(0, len(self.fields)):
             Label(self.table, relief=SUNKEN, bd=2,
                   width=self.width[col],
                   font=adplugin_font, text=self.fields[col]).grid(row=0, column=col, sticky=W+E)
 
-        for row in xrange(0, rows):
+        for row in range(0, rows):
             self.entry[row] = {}
-            for colx in xrange(0, cols):
+            for colx in range(0, cols):
                 self.entry[row][colx] = TableCell(self.table, row=row,
                                                  col=colx, entry=self.entry,
                                                  command=self)
@@ -3986,9 +4005,9 @@ class ScoreTable(Frame):
             firstVisible = 0
         self.firstVisible = firstVisible
         self.lastVisible = firstVisible+self.windowSize-1
-        if self.lastVisible < len(self.data.values()):
-            for row in xrange(0, self.windowSize):
-                for col in xrange(0, self.cols):
+        if self.lastVisible < len(list(self.data.values())):
+            for row in range(0, self.windowSize):
+                for col in range(0, self.cols):
                     try:
                         self.entry[row][col]["text"] = self.data[row+firstVisible][col]
                     except:
@@ -4031,13 +4050,13 @@ class ScoreTable(Frame):
         self.set_cell_value(self.rows-1, 1, ligand.name)
         self.set_cell_value(self.rows-1, 2, ligand.poseN)
         self.set_cell_value(self.rows-1, 3, ligand.energy)
-        
+
 
     def updateView(self, ligand_list):
         for i, ligand in enumerate(ligand_list):
             self.add_ligand(ligand, i+1)
 
-            
+
     def resetTable(self):
         for i in range(self.rows):
             for k in range(4):
